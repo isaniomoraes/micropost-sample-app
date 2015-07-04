@@ -39,8 +39,8 @@ class UserTest < ActiveSupport::TestCase
 
   test "email validation should reject invalid addresses" do
     invalid_addresses = %w[user@example,com user_at_foo.org user.name@example.
-                           foo@bar_baz.com foo@bar+baz.com]
-    invalid_addresses.each do |invalid_address|
+     foo@bar_baz.com foo@bar+baz.com]
+     invalid_addresses.each do |invalid_address|
       @user.email = invalid_address
       assert_not @user.valid?, "#{invalid_address.inspect} should be invalid"
     end
@@ -70,4 +70,32 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
+  test "should follow and unfollow a user" do
+   michael = users(:michael)
+   archer  = users(:archer)
+   assert_not michael.following?(archer)
+   michael.follow(archer)
+   assert michael.following?(archer)
+   assert archer.followers.include?(michael)
+   michael.unfollow(archer)
+   assert_not michael.following?(archer)
+ end
+
+ test "feed should have the right posts" do
+  michael = users(:michael)
+  archer  = users(:archer)
+  lana    = users(:lana)
+  # Posts from followed user
+  lana.microposts.each do |post_following|
+    assert michael.feed.include?(post_following)
+  end
+  # Posts from self
+  michael.microposts.each do |post_self|
+    assert michael.feed.include?(post_self)
+  end
+  # Posts from unfollowed user
+  archer.microposts.each do |post_unfollowed|
+    assert_not michael.feed.include?(post_unfollowed)
+  end
+end
 end
